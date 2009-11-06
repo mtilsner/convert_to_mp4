@@ -1,0 +1,44 @@
+#!/usr/bin/python
+
+import os, sys
+
+input = None
+output = None
+
+def usage():
+    print "There are two modes for convert_mkv_to_mp4:"
+    print "1) Call: convert_mkv_to_mp4 -i FILE -o FILE"
+    print "\tinput and output files are explicitly specified"
+    print "2) Call: convert_mkv_to_mp4 FILE"
+    print "\tthe supplied file is used for input"
+    print "\ta new output file is created named after the input with an '.mp4' file extension."
+
+def read_mode1():
+    global input,output
+    input = sys.argv[2]
+    output = sys.argv[4]
+
+def read_mode2():
+    global input,output
+    input = sys.argv[1]
+    ext = os.path.splitext(input)[1]
+    output = input[:-len(ext)]+".mp4"
+
+def read():
+    if len(sys.argv) == 2:
+        read_mode2()
+    elif len(sys.argv) == 5 and sys.argv[1] == '-i' and sys.argv[3] == '-o':
+        read_mode1()
+    else:
+        print "Invalid call: convert_mkv_to_mp4",' '.join(sys.argv[1:])
+        usage()
+        sys.exit(2)
+
+def main():
+    read()
+    print "Input:",input
+    print "Output:",output
+
+main()
+
+#os.system("ls -l")
