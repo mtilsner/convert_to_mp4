@@ -2,8 +2,8 @@
 
 import os, sys
 
-input = None
-output = None
+_inputFile = None
+_outputFile = None
 
 def usage():
     print "There are two modes for convert_mkv_to_mp4:"
@@ -14,30 +14,35 @@ def usage():
     print "\ta new output file is created named after the input with an '.mp4' file extension."
 
 def read_mode1():
-    global input,output
-    input = sys.argv[2]
-    output = sys.argv[4]
+    return sys.argv[2],sys.argv[4]
 
 def read_mode2():
-    global input,output
-    input = sys.argv[1]
-    ext = os.path.splitext(input)[1]
-    output = input[:-len(ext)]+".mp4"
+    if sys.argv[1].find(".") > 0:
+        return sys.argv[1],sys.argv[1][:-len(os.path.splitext(sys.argv[1])[1])]+".mp4"
+    else:
+        return sys.argv[1],sys.argv[1]+".mp4"
 
 def read():
+    global input,output
     if len(sys.argv) == 2:
-        read_mode2()
+        _inputFile,_outputFile = read_mode2()
     elif len(sys.argv) == 5 and sys.argv[1] == '-i' and sys.argv[3] == '-o':
-        read_mode1()
+        _inputFile,_outputFile = read_mode1()
     else:
         print "Invalid call: convert_mkv_to_mp4",' '.join(sys.argv[1:])
         usage()
         sys.exit(2)
+    if not os.path.exists(_inputFile):
+        print "Invalid call: file '%s' does not exist!" % _inputFile
+        sys.exit(2)
+    if os.path.exists(_outputFile):
+        _response = raw_input("Warning: file '%s' already exists! Should it be overwritten? [yes/no] " % _outputFile)
+	if _response != "yes":
+	    sys.exit(2)
+    print "Converting %s into %s" % (_inputFile,_outputFile)
 
 def main():
     read()
-    print "Input:",input
-    print "Output:",output
 
 main()
 
