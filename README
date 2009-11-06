@@ -1,3 +1,3 @@
-This will be small script to convert HD MKV files to MP4 without having to transcode the video track.
-The audio track will have to be reencoded to AAC since MP4 does not support AC3 encoding.
-This tool requires "mkvinfo", "mkvextract", "ffmpeg", and "MP4Box" to be available in your system bin path.
+This is aimed to be a collection of scripts that can be used for converting all different kinds of video files
+into the mp4 format. The mp4 format has the advantage of allowing hardware acceleration on Apple QuickTime X, can
+be natively used on almost all operating systems, and is supported by Sony PS3.
