@@ -1,9 +1,26 @@
 #!/usr/bin/python
 
-import os, sys
+import re, os, sys
 
 _inputFile = None
 _outputFile = None
+_inputInfoVideotrack = None
+_inputInfoVideofps = None
+
+tmp_dir = "/tmp/cmkv2mp4/"
+tmp_info  = tmp_dir+"info"
+tmp_video = tmp_dir+"video.h264"
+tmp_audio = tmp_dir+"audio.aac"
+
+def cleanup():
+	os.system("rm -Rf %s" % tmp_dir)
+
+def die():
+	cleanup()
+	sys.exit(2)
+
+def prepare():
+    os.system("mkdir -p %s" % tmp_dir)
 
 def usage():
     print "There are two modes for convert_mkv_to_mp4:"
@@ -22,8 +39,8 @@ def read_mode2():
     else:
         return sys.argv[1],sys.argv[1]+".mp4"
 
-def read():
-    global input,output
+def read_input():
+    global _inputFile,_outputFile
     if len(sys.argv) == 2:
         _inputFile,_outputFile = read_mode2()
     elif len(sys.argv) == 5 and sys.argv[1] == '-i' and sys.argv[3] == '-o':
@@ -31,19 +48,48 @@ def read():
     else:
         print "Invalid call: convert_mkv_to_mp4",' '.join(sys.argv[1:])
         usage()
-        sys.exit(2)
+        die()
     if not os.path.exists(_inputFile):
         print "Invalid call: file '%s' does not exist!" % _inputFile
-        sys.exit(2)
+        die()
     if os.path.exists(_outputFile):
         _response = raw_input("Warning: file '%s' already exists! Should it be overwritten? [yes/no] " % _outputFile)
 	if _response != "yes":
-	    sys.exit(2)
-    print "Converting %s into %s" % (_inputFile,_outputFile)
+	    die()
+    print "Converting '%s' into '%s'" % (_inputFile,_outputFile)
 
-def main():
-    read()
+def get_mkv_info():
+	global _inputInfoVideotrack,_inputInfoVideofps
+	os.system("mkvinfo --ui-language en_US %s > %s" % (_inputFile, tmp_info))
+	with open(tmp_info, "r") as _file:
+		_info = re.search("\|  \+ Track number: (\d+)\n(\|  \+[^\n]+\n)*\|  \+ Track type: video\n(\|  \+[^\n]+\n)*\|  \+ Default duration: [\d\.]+ms \(([\d]+\.[\d]+) fps", _file.read())
+	_inputInfoVideotrack = _info.group(1)
+	_inputInfoVidefps    = _info.group(4)
 
-main()
+def extract_video():
+	os.system("mkvextract tracks %s %s:%s" % (_inputFile,_inputInfoVideotrack,tmp_video))
+	if not os.path.exists(tmp_video):
+		print "Unable to extract the video track from source. Please check your log."
+		die()
 
-#os.system("ls -l")
+def transcode_audio():
+	print "ffmpeg -i %s -vn -acodec libfaac -ac 2 %s" % (_inputFile,tmp_audio)
+	os.system("ffmpeg -i %s -vn -acodec libfaac -ac 2 %s" % (_inputFile,tmp_audio))
+	if not os.path.exists(tmp_audio):
+		print "Unable to transcode the audio track. Please check your log."
+		die()
+
+def mux_mp4():
+	os.system("MP4Box -fps %s -add %s -add %s %s" % (_inputInfoVideofps,tmp_video,tmp_audio,_outputFile))
+
+def conclude():
+	print "Video file was successfully created in '%s'" % _outputFile
+	cleanup()
+
+prepare()
+read_input()
+get_mkv_info()
+extract_video()
+transcode_audio()
+mux_mp4()
+conclude()
