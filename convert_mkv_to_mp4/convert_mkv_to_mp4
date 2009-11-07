@@ -40,23 +40,24 @@ def read_mode2():
         return sys.argv[1],sys.argv[1]+".mp4"
 
 def read_input():
-    global _inputFile,_outputFile
-    if len(sys.argv) == 2:
-        _inputFile,_outputFile = read_mode2()
-    elif len(sys.argv) == 5 and sys.argv[1] == '-i' and sys.argv[3] == '-o':
-        _inputFile,_outputFile = read_mode1()
-    else:
-        print "Invalid call: convert_mkv_to_mp4",' '.join(sys.argv[1:])
-        usage()
-        die()
-    if not os.path.exists(_inputFile):
-        print "Invalid call: file '%s' does not exist!" % _inputFile
-        die()
-    if os.path.exists(_outputFile):
-        _response = raw_input("Warning: file '%s' already exists! Should it be overwritten? [yes/no] " % _outputFile)
-	if _response != "yes":
-	    die()
-    print "Converting '%s' into '%s'" % (_inputFile,_outputFile)
+	global _inputFile,_outputFile
+	if len(sys.argv) == 2:
+		_inputFile,_outputFile = read_mode2()
+	elif len(sys.argv) == 5 and sys.argv[1] == '-i' and sys.argv[3] == '-o':
+		_inputFile,_outputFile = read_mode1()
+	else:
+		print "Invalid call: convert_mkv_to_mp4",' '.join(sys.argv[1:])
+		usage()
+		die()
+	if not os.path.exists(_inputFile):
+		print "Invalid call: file '%s' does not exist!" % _inputFile
+		die()
+	if os.path.exists(_outputFile):
+		_response = raw_input("Warning: file '%s' already exists! Should it be overwritten? [yes/no] " % _outputFile)
+		if _response != "yes":
+			die()
+	print "Converting '%s' into '%s'" % (_inputFile,_outputFile)
+	
 
 def get_mkv_info():
 	global _inputInfoVideotrack,_inputInfoVideofps
@@ -64,7 +65,7 @@ def get_mkv_info():
 	with open(tmp_info, "r") as _file:
 		_info = re.search("\|  \+ Track number: (\d+)\n(\|  \+[^\n]+\n)*\|  \+ Track type: video\n(\|  \+[^\n]+\n)*\|  \+ Default duration: [\d\.]+ms \(([\d]+\.[\d]+) fps", _file.read())
 	_inputInfoVideotrack = _info.group(1)
-	_inputInfoVidefps    = _info.group(4)
+	_inputInfoVideofps   = _info.group(4)
 
 def extract_video():
 	os.system("mkvextract tracks %s %s:%s" % (_inputFile,_inputInfoVideotrack,tmp_video))
