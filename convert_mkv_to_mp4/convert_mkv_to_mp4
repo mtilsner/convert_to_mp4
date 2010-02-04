@@ -6,11 +6,12 @@ _inputFile = None
 _outputFile = None
 _inputInfoVideotrack = None
 _inputInfoVideofps = None
+_inputInfoAudiotrack = None
 
 tmp_dir = "/tmp/cmkv2mp4/"
 tmp_info  = tmp_dir+"info"
 tmp_video = tmp_dir+"video.h264"
-tmp_audio = tmp_dir+"audio.aac"
+tmp_audio = tmp_dir+"audio.ac3"
 
 def cleanup():
 	os.system("rm -Rf %s" % tmp_dir)
@@ -60,23 +61,23 @@ def read_input():
 	
 
 def get_mkv_info():
-	global _inputInfoVideotrack,_inputInfoVideofps
+	global _inputInfoVideotrack,_inputInfoVideofps,_inputInfoAudiotrack
 	os.system("mkvinfo --ui-language en_US %s > %s" % (_inputFile, tmp_info))
 	with open(tmp_info, "r") as _file:
 		_info = re.search("\|  \+ Track number: (\d+)\n(\|  \+[^\n]+\n)*\|  \+ Track type: video\n(\|  \+[^\n]+\n)*\|  \+ Default duration: [\d\.]+ms \(([\d]+\.[\d]+) fps", _file.read())
 	_inputInfoVideotrack = _info.group(1)
 	_inputInfoVideofps   = _info.group(4)
+	with open(tmp_info, "r") as _file:
+		_info = re.search("\|  \+ Track number: (\d+)\n(\|  \+[^\n]+\n)*\|  \+ Track type: audio\n", _file.read())
+	_inputInfoAudiotrack = _info.group(1)
 
-def extract_video():
-	os.system("mkvextract tracks %s %s:%s" % (_inputFile,_inputInfoVideotrack,tmp_video))
+def extract_video_and_audio():
+	os.system("mkvextract tracks %s %s:%s %s:%s" % (_inputFile,_inputInfoVideotrack,tmp_video,_inputInfoAudiotrack,tmp_audio))
 	if not os.path.exists(tmp_video):
 		print "Unable to extract the video track from source. Please check your log."
 		die()
-
-def transcode_audio():
-	os.system("ffmpeg -i %s -vn -acodec libfaac -ac 2 %s" % (_inputFile,tmp_audio))
 	if not os.path.exists(tmp_audio):
-		print "Unable to transcode the audio track. Please check your log."
+		print "Unable to extract the audio track from source. Please check your log."
 		die()
 
 def mux_mp4():
@@ -89,7 +90,6 @@ def conclude():
 prepare()
 read_input()
 get_mkv_info()
-extract_video()
-transcode_audio()
+extract_video_and_audio()
 mux_mp4()
 conclude()
