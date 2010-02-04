@@ -74,7 +74,6 @@ def extract_video():
 		die()
 
 def transcode_audio():
-	print "ffmpeg -i %s -vn -acodec libfaac -ac 2 %s" % (_inputFile,tmp_audio)
 	os.system("ffmpeg -i %s -vn -acodec libfaac -ac 2 %s" % (_inputFile,tmp_audio))
 	if not os.path.exists(tmp_audio):
 		print "Unable to transcode the audio track. Please check your log."
